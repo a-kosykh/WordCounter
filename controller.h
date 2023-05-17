@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "contentprocessor.h"
+#include "fileloader.h"
 
 #include <QThread>
 #include <QObject>
@@ -19,11 +19,11 @@ public:
 
 signals:
     void topWordsChanged();
+    void buttonClicked();
 
 private:
-    QThread m_fileCheckerThread;
-    QThread m_contentProcessorThread;
-    ContentProcessor* m_contentProcessor;
+    QThread m_fileLoaderThread;
+    FileLoader* m_fileLoader;
     int m_debugNumber = 4;
 
 };

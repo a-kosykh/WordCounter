@@ -6,36 +6,24 @@
 Controller::Controller(QObject *parent)
     : QObject{parent}
 {
-    FileLoader* fileChecker = new FileLoader;
-    fileChecker->moveToThread(&m_fileCheckerThread);
-    connect(&m_fileCheckerThread, &QThread::finished, fileChecker, &FileLoader::deleteLater);
+    m_fileLoader = new FileLoader;
+    m_fileLoader->moveToThread(&m_fileLoaderThread);
+    connect(this, &Controller::buttonClicked, m_fileLoader, &FileLoader::openFile);
+    connect(m_fileLoader, &FileLoader::topWordsChanged, this, &Controller::topWordsChanged);
+    connect(&m_fileLoaderThread, &QThread::finished, m_fileLoader, &FileLoader::deleteLater);
 
-    m_contentProcessor = new ContentProcessor;
-    m_contentProcessor->moveToThread(&m_contentProcessorThread);
-    connect(fileChecker, &FileLoader::contentChanged, m_contentProcessor, &ContentProcessor::process);
-    connect(m_contentProcessor, &ContentProcessor::topWordsChanged, this, &Controller::debugPrint);
-    connect(m_contentProcessor, &ContentProcessor::topWordsChanged, this, &Controller::topWordsChanged);
-    connect(&m_contentProcessorThread, &QThread::finished, m_contentProcessor, &ContentProcessor::deleteLater);
-
-    m_fileCheckerThread.start();
-    m_contentProcessorThread.start();
+    m_fileLoaderThread.start();
 }
 
 Controller::~Controller()
 {
-    m_fileCheckerThread.quit();
-    m_fileCheckerThread.wait();
+    m_fileLoaderThread.requestInterruption();
 
-    m_contentProcessorThread.quit();
-    m_contentProcessorThread.wait();
+    m_fileLoaderThread.quit();
+    m_fileLoaderThread.wait();
 }
 
 QVariantList Controller::topWords() const
 {
-    return m_contentProcessor->getTopWords();
-}
-
-void Controller::debugPrint()
-{
-    //qDebug() << m_contentProcessor->getTopWords();
+    return m_fileLoader->getTopWords();
 }

@@ -14,6 +14,5 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("histogram_ctrl", QVariant::fromValue(&c1));
     engine.load(url);
 
-
     return app.exec();
 }

@@ -1,7 +1,9 @@
 #ifndef FILELOADER_H
 #define FILELOADER_H
 
-#include <QFileSystemWatcher>
+#include <QVariantList>
+#include <QHash>
+#include <QFile>
 #include <QObject>
 
 class FileLoader : public QObject
@@ -9,16 +11,23 @@ class FileLoader : public QObject
     Q_OBJECT
 public:
     explicit FileLoader(QObject *parent = nullptr);
+    void openFile();
+    void processLine(const QString& line);
+    QVariantList getTopWords() const;
 
 signals:
-    void contentChanged(const QByteArray& fileContent);
+    void lineParsed(const QString& fileContent);
+    void topWordsChanged();
 
 private:
-    QFileSystemWatcher m_fileSystemWatcher;
+    QVariantList m_topWords;
+    QHash<QString, int> m_wordsCount;
     QByteArray m_content;
+    QFile m_file;
 
 private:
     void handler(const QString& filename);
+    void setTopWords(const QVariantList& topWords);
 
 };
 
