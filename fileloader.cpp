@@ -21,13 +21,14 @@ void FileLoader::openFile()
         return;
     }
 
+    quint64 totalSize = m_file.size();
+
     QTextStream in(&m_file);
 
     int i = 0;
     QString lines;
     while (!in.atEnd())
     {
-
         QString line;
         line += in.readLine();
         if (line.isEmpty() || line.contains(QChar::CarriageReturn)) {
@@ -39,61 +40,12 @@ void FileLoader::openFile()
             if (QThread::currentThread()->isInterruptionRequested()) {
                 break;
             }
-            processLine(lines);
+            emit partParsed(lines, in.pos(), totalSize);
             lines.clear();
             i = 0;
         }
     }
-    processLine(lines);
+    emit partParsed(lines, in.pos(), totalSize);
 
     m_file.close();
-}
-
-void FileLoader::processLine(const QString &line)
-{
-    const auto words = line.split(' ');
-    for (const QString &word : words) {
-        m_wordsCount[word]++;
-    }
-
-    QVariantList l;
-    foreach (QString word, m_wordsCount.keys()) {
-        l.append(QVariantMap({{"word", word}, {"count", m_wordsCount.value(word)}}));
-    }
-
-    std::sort(l.begin(), l.end(), [](const QVariant& lhs, const QVariant& rhs) {
-        return lhs.toMap().value("count").toInt() > rhs.toMap().value("count").toInt();
-    });
-
-    // TODO: rewrite
-    QVariantList l2;
-    int i = 0;
-    for (const auto &word : l) {
-        l2.append(word);
-        if (i++ >= 15) {
-            break;
-        }
-    }
-
-    setTopWords(l2);
-}
-
-QVariantList FileLoader::getTopWords() const
-{
-    return m_topWords;
-}
-
-
-void FileLoader::handler(const QString &filename)
-{
-
-}
-
-void FileLoader::setTopWords(const QVariantList &topWords)
-{
-    if (m_topWords == topWords) {
-        return;
-    }
-    m_topWords = topWords;
-    emit topWordsChanged();
 }

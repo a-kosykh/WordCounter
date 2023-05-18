@@ -12,22 +12,13 @@ class FileLoader : public QObject
 public:
     explicit FileLoader(QObject *parent = nullptr);
     void openFile();
-    void processLine(const QString& line);
     QVariantList getTopWords() const;
 
 signals:
-    void lineParsed(const QString& fileContent);
-    void topWordsChanged();
+    void partParsed(const QString& line, quint64 processedBytes, quint64 totalBytes);
 
 private:
-    QVariantList m_topWords;
-    QHash<QString, int> m_wordsCount;
-    QByteArray m_content;
     QFile m_file;
-
-private:
-    void handler(const QString& filename);
-    void setTopWords(const QVariantList& topWords);
 
 };
 

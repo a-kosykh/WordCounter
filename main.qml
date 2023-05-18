@@ -1,107 +1,151 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Window {
     id: mainWin
     width: 640
     height: 480
+    minimumWidth: 640
+    minimumHeight: 480
     visible: true
     title: qsTr("Histogram")
 
-    Item {
+    Column {
+        id: root
         anchors.fill: parent
+        RowLayout {
+            id: buttonsLayout
+            anchors.left: root.left
+            anchors.right: root.right
+            anchors.margins: 5
+            height: openFileBtn.height
+            Button {
+                id: openFileBtn
+                Layout.fillWidth: true
+                text: "Open File"
+                onClicked: {
+                    histogram_ctrl.buttonClicked()
+                }
+            }
+            Button {
+                id: anotherBtn
+                Layout.fillWidth: true
+                text: "Open File"
+                onClicked: {
+                    histogram_ctrl.buttonClicked()
+                }
+            }
+        }
         Rectangle {
-            id: root
-            anchors.fill: parent
+            id: histogramRoot
+            anchors.left: root.left
+            anchors.right: root.right
+            height: root.height - buttonsLayout.height - buttonsLayout.height
+
             property color backgroundColor: "white"
             property color gridColor: "slategray"
-            property color legendColor: "lightgray"
+            property color legendColor: "white"
             property bool legendEnabled: true
             property int gridSpacing: 10000
             property double maxValue: 100000
             property int dataMargin: 5 * (mainWin.width / 640)
 
+            property var model: histogram_ctrl.topWords
+
             Rectangle {
                 id: grid
-                anchors.fill: root
+                anchors.fill: histogramRoot
                 anchors.leftMargin: 50
                 anchors.rightMargin: 50 + legend.width
                 anchors.topMargin: 10
                 anchors.bottomMargin: 10
                 color: "white"
                 Repeater {
-                    model: root.maxValue / root.gridSpacing
+                    model: histogramRoot.maxValue / histogramRoot.gridSpacing
                     Rectangle {
                         width: grid.width
                         height: 1
                         opacity: 0.5
-                        color: root.gridColor
-                        y: grid.height - index * grid.height / ( root.maxValue / root.gridSpacing )
+                        color: histogramRoot.gridColor
+                        y: grid.height - index * grid.height / ( histogramRoot.maxValue / histogramRoot.gridSpacing )
                     }
                 }
                 Repeater {
-                    model: root.maxValue / root.gridSpacing
-                    //y: grid.height - index * grid.height / ( root.maxValue / root.gridSpacing )
+                    model: histogramRoot.maxValue / histogramRoot.gridSpacing
 
                     Text {
-                        text: index * root.gridSpacing
-                        y: grid.height - index * grid.height / ( root.maxValue / root.gridSpacing ) - height / 2
+                        text: index * histogramRoot.gridSpacing
+                        y: grid.height - index * grid.height / ( histogramRoot.maxValue / histogramRoot.gridSpacing ) - height / 2
                         anchors.right: grid.left
                     }
                 }
                 Repeater {
                     id: dataRep
-                    model: histogram_ctrl.topWords
-                    Rectangle {
-                        height: modelData.count * grid.height / root.maxValue
-                        width: grid.width / dataRep.count - 2 * root.dataMargin
-                        color: "lightblue"
-                        x: index * (width + root.dataMargin * 2) + root.dataMargin
+                    model: histogramRoot.model
+
+                    delegate: Rectangle
+                    {
+                        id: bar
+                        height: modelData.count * grid.height / histogramRoot.maxValue
+                        width: grid.width / dataRep.count - 2 * histogramRoot.dataMargin
+                        color: modelData.color
+                        x: index * (width + histogramRoot.dataMargin * 2) + histogramRoot.dataMargin
                         y: grid.height - height
                         border.width: 1
                     }
                 }
             }
             Rectangle {
-                id: legend
-                width: root.legendEnabled ? root.width * 0.1: 0
-                color: root.legendColor
-                anchors.right: root.right
-                anchors.top: root.top
+                width: histogramRoot.legendEnabled ? histogramRoot.width * 0.1: 0
+                anchors.right: histogramRoot.right
+                anchors.verticalCenter: histogramRoot.verticalCenter
                 anchors.topMargin: 10
                 height: grid.height
-                visible: root.legendEnabled
-                Column {
-                    anchors.centerIn: legend
-                    anchors.left: legend.left
-                    Repeater {
-                        id: legendRep
-                        model: root.model
+                visible: histogramRoot.legendEnabled
+                color: histogramRoot.legendColor
+                border.color: "black"
+                border.width: 2
+                Item {
+                    id: legend
+                    anchors.fill: parent
+                    anchors.margins: 5
 
-                        Row {
-                            Rectangle {
-                                width: height
-                                height: legendText.height
-                                color: model.color
-                            }
-                            Text {
-                                id: legendText
-                                text: model.legend
+                    ColumnLayout {
+                        anchors.fill: legend
+                        spacing: 5
+                        Repeater {
+                            id: legendRep
+                            model: histogramRoot.model
+
+                            Row {
+                                spacing: 5
+                                Rectangle {
+                                    width: height
+                                    height: legendText.height
+                                    color: modelData.color
+                                }
+                                Text {
+                                    id: legendText
+                                    text: modelData.word
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        Button {
-            id: btn
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 50
-            text: "adasd"
-            onClicked: {
-                histogram_ctrl.buttonClicked()
+
+        ProgressBar {
+            anchors.left: root.left
+            anchors.right: root.right
+            anchors.margins: 5
+            height: buttonsLayout.height
+            value: histogram_ctrl.progress
+
+            Behavior on value {
+                NumberAnimation{}
             }
         }
     }
