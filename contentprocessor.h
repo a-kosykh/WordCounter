@@ -19,6 +19,17 @@ public:
     void process(const QString& line, quint64 processedBytes, quint64 totalBytes);
     QVariantList getTopWords();
     double getProgress();
+    int getMaxCount();
+
+    void clearContents();
+    void setAbortTrue();
+    void setAbortFalse();
+
+public:
+    const QString wordProp = "word";
+    const QString countProp = "count";
+    const QString colorProp = "color";
+    const int topCount = 15;
 
 signals:
     void topWordsChanged();
@@ -33,6 +44,7 @@ private:
 private:
     void setTopWords(const QVariantList& topWords);
     void setProgress(double progress);
+
 };
 
 #endif // CONTENTPROCESSOR_H

@@ -23,34 +23,26 @@ void ContentProcessor::process(const QString& line, quint64 processedBytes, quin
             if (m_wordsCount.contains(word)) {
                 m_wordsCount[word].count++;
             } else {
-                WordProperties wp{1, QColor(qrand()%255, qrand()%255, qrand()%255)};
+                WordProperties wp{1, QColor(qrand() % 255, qrand() % 255, qrand() % 255)};
                 m_wordsCount[word] = wp;
             }
         }
     }
 
-    QVariantList l;
+    QVector<QVariant> v;
     foreach (QString word, m_wordsCount.keys()) {
-        l.append(QVariantMap({{"word", word},
-                              {"count", m_wordsCount.value(word).count},
-                              {"color", m_wordsCount.value(word).color}}));
+        v.append(QVariantMap({{wordProp, word},
+                              {countProp, m_wordsCount.value(word).count},
+                              {colorProp, m_wordsCount.value(word).color}}));
     }
 
-    std::sort(l.begin(), l.end(), [](const QVariant& lhs, const QVariant& rhs) {
-        return lhs.toMap().value("count").toInt() > rhs.toMap().value("count").toInt();
+    std::sort(v.begin(), v.end(), [this](const QVariant& lhs, const QVariant& rhs) {
+        return lhs.toMap().value(countProp).toInt() > rhs.toMap().value(countProp).toInt();
     });
 
-    // TODO: rewrite
-    QVariantList l2;
-    int i = 0;
-    for (const auto &word : l) {
-        l2.append(word);
-        if (i++ >= 15) {
-            break;
-        }
-    }
+    v.resize(qMin(v.size(), topCount));
 
-    setTopWords(l2);
+    setTopWords(v.toList());
     setProgress(static_cast<double>(processedBytes) / static_cast<double>(totalBytes));
 }
 
@@ -64,6 +56,22 @@ double ContentProcessor::getProgress()
 {
     QMutexLocker locker(&m_mutex);
     return m_progress;
+}
+
+int ContentProcessor::getMaxCount()
+{
+    QMutexLocker locker(&m_mutex);
+    if (m_topWords.isEmpty()) {
+        return 0;
+    }
+    return m_topWords.at(0).toMap().value(countProp).toInt();
+}
+
+void ContentProcessor::clearContents()
+{
+    m_wordsCount.clear();
+    setTopWords({});
+    setProgress(0.0);
 }
 
 void ContentProcessor::setTopWords(const QVariantList &topWords)
