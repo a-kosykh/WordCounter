@@ -36,5 +36,5 @@ n - количество обрабатываемых строк за одну �
 
 ## Пример использования приложения
 
-![Word Counter](WordCounterExample.mp4 "Word Counter")
+![Word Counter](WordCounterExample.gif "Word Counter")
 
